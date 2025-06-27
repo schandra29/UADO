@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { printError } from './ui';
+import { computeHash } from '../utils/hash';
 
 export interface PasteLogEntry {
   timestamp: string;
@@ -10,6 +11,7 @@ export interface PasteLogEntry {
   queueIndex: number;
   wasOverwrite: boolean;
   error?: string;
+  hash?: string;
 }
 
 export function logPaste(entry: PasteLogEntry): void {
@@ -35,6 +37,13 @@ export function logPaste(entry: PasteLogEntry): void {
     log = [];
   }
 
+  try {
+    const hash = computeHash(entry);
+    if (hash) entry.hash = hash;
+  } catch {
+    // ignore hashing errors
+  }
+
   log.push(entry);
 
   try {
@@ -49,6 +58,7 @@ export interface PasteQueueEntry {
   prompt: string;
   timestamp: string;
   files: PasteLogEntry[];
+  hash?: string;
 }
 
 export function logQueueEntry(entry: PasteQueueEntry): void {
@@ -81,6 +91,13 @@ export function logQueueEntry(entry: PasteQueueEntry): void {
       : 1;
 
   entry.queueIndex = nextIndex;
+
+  try {
+    const hash = computeHash(entry);
+    if (hash) entry.hash = hash;
+  } catch {
+    // ignore hashing errors
+  }
   log.push(entry);
 
   try {

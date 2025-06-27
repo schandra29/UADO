@@ -9,6 +9,8 @@ import { registerDashboardCommand } from './dashboard';
 import { registerPromptCommand } from './prompt';
 import { runHistoryCommand } from './history';
 import { registerTestCommand } from './test';
+import { runReplayCommand } from './replay';
+
 import { printInfo } from './ui';
 
 const program = new Command();
@@ -48,6 +50,10 @@ program
   .command('history')
   .description('Show paste history')
   .action(runHistoryCommand);
+program
+  .command('replay <index>')
+  .description('Replay queued paste files')
+  .action(runReplayCommand);
 maybeShowWelcome();
 program.parse(process.argv);
 

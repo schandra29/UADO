@@ -1,0 +1,60 @@
+import fs from 'fs';
+import path from 'path';
+import { PasteLogEntry } from './logPaste';
+import { printError, printInfo, printSuccess } from './ui';
+
+export interface QueueLogEntry {
+  queueIndex: number;
+  prompt: string;
+  timestamp: string;
+  files: Array<PasteLogEntry & { output?: string }>;
+}
+
+export function runReplayCommand(indexStr: string): void {
+  const index = parseInt(indexStr, 10);
+  if (Number.isNaN(index)) {
+    printError('Invalid queue index');
+    return;
+  }
+
+  const logPath = path.join(process.cwd(), '.uado', 'queue.log.json');
+  let data: unknown;
+  try {
+    data = JSON.parse(fs.readFileSync(logPath, 'utf8'));
+  } catch (err: any) {
+    printError(`Failed to read queue log: ${err.message}`);
+    return;
+  }
+
+  if (!Array.isArray(data)) {
+    printError('Queue log is not in the expected format.');
+    return;
+  }
+
+  const entries = data as QueueLogEntry[];
+  const entry = entries.find((e) => e.queueIndex === index);
+  if (!entry) {
+    printError(`Queue entry #${index} not found.`);
+    return;
+  }
+
+  printInfo(`\n🔁 Replaying queue entry #${index}...`);
+
+  for (const file of entry.files) {
+    const dest = path.join(process.cwd(), file.file);
+    const exists = fs.existsSync(dest);
+    if (exists && file.wasOverwrite === false) {
+      printError(`Skipped existing file: ${file.file}`);
+      continue;
+    }
+
+    try {
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.writeFileSync(dest, file.output || '');
+      printSuccess(`Restored: ./${file.file} (${file.bytesWritten} bytes)`);
+    } catch (err: any) {
+      printError(`Failed to restore ${file.file}: ${err.message}`);
+    }
+  }
+}
+
