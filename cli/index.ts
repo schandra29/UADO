@@ -11,13 +11,14 @@ import { runHistoryCommand } from './history';
 import { registerTestCommand } from './test';
 import { runReplayCommand } from './replay';
 
-import { printInfo } from './ui';
+import { printInfo, setUseEmoji } from './ui';
 
 const program = new Command();
 program
   .name('uado')
   .description('Universal AI Development Orchestrator')
-  .option('-c, --config <path>', 'path to config file');
+  .option('-c, --config <path>', 'path to config file')
+  .option('--no-emoji', 'disable emoji in output');
 
 program
   .command('watch')
@@ -54,8 +55,10 @@ program
   .command('replay <index>')
   .description('Replay queued paste files')
   .action(runReplayCommand);
-maybeShowWelcome();
 program.parse(process.argv);
+const opts = program.opts();
+setUseEmoji(!(opts.noEmoji === true));
+maybeShowWelcome();
 
 function maybeShowWelcome(): void {
   const dir = path.join(process.cwd(), '.uado');
