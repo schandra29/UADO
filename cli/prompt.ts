@@ -22,6 +22,12 @@ export function registerPromptCommand(program: Command): void {
       const fakeCallAI = (input: string): Promise<string> =>
         new Promise((res) => setTimeout(() => res(`Response: ${input}`), 1000));
 
+      // TODO: support a --dry-run flag
+      // if (dryRun) {
+      //   logger.info('Would execute prompt, but dry run is enabled.');
+      //   return;
+      // }
+
       let queued = false;
       cooldown.on('cooldown:active', () => {
         queued = true;

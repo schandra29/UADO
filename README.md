@@ -55,3 +55,11 @@ await orchestrator.wrapPrompt(() => yourFunc());
 - **Link locally**: `npm link` (after building)
 - **Run in dev mode**: `node dist/index.js` or use the linked `uado` command
 
+
+## 🔐 Security & Privacy
+
+UADO is fully local-first. It does **not** send prompts, logs, or metadata to any external server.  
+All orchestration happens on your machine using local file watchers and diagnostic signals.  
+See [`SECURITY.md`](./SECURITY.md) for more details.
+
+
