@@ -5,7 +5,8 @@
     "bytesWritten": 10,
     "prompt": "Mock prompt",
     "queueIndex": 1,
-    "wasOverwrite": false
+    "wasOverwrite": false,
+    "hash": "8f47936929a1664e1535397b73820654e7f288f6ab9b667ad1b5bf724fea9306"
   },
   {
     "timestamp": "2024-01-01T00:00:00.000Z",
@@ -13,7 +14,8 @@
     "bytesWritten": 10,
     "prompt": "Mock prompt",
     "queueIndex": 1,
-    "wasOverwrite": false
+    "wasOverwrite": false,
+    "hash": "652783340d5457bb79a8b1b4e06431c7e796c17339451beec3aaaa11a268db48"
   },
   {
     "timestamp": "2024-01-01T00:00:00.000Z",
@@ -21,6 +23,7 @@
     "bytesWritten": 10,
     "prompt": "Mock prompt",
     "queueIndex": 1,
-    "wasOverwrite": false
+    "wasOverwrite": false,
+    "hash": "700ff5a866d55c2576557e1a7253226940ef75bf05f97e821bfa4c1f4c140d34"
   }
 ]
