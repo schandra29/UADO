@@ -1,0 +1,9 @@
+node_modules
+*.log
+
+# compiled output
+*.js
+*.js.map
+
+# ignore watch output or coverage
+coverage
