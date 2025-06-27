@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import pino from 'pino';
 import { createFileWatcher } from '../core/file-watcher';
 import { createLspWatcher } from '../core/lsp-watcher';
+import { registerDashboardCommand } from './dashboard';
 
 const program = new Command();
 program
@@ -29,5 +30,7 @@ program
       logger.info('lspready event received');
     });
   });
+
+registerDashboardCommand(program);
 
 program.parse(process.argv);
