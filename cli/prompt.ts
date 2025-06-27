@@ -8,30 +8,23 @@ import { logPaste, PasteLogEntry } from './logPaste';
 import { createCooldownEngine } from '../core/cooldown-engine';
 import { createOrchestrator } from '../core/orchestrator';
 import { loadConfig } from '../core/config-loader';
-
-let chalk: { green: (s: string) => string; red: (s: string) => string; blue: (s: string) => string };
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  chalk = require('chalk');
-} catch {
-  chalk = { green: (s: string) => s, red: (s: string) => s, blue: (s: string) => s };
-}
+import { printSuccess, printError, printInfo } from './ui';
 
 function printPromptBox(text: string): void {
   const lines = text.split(/\r?\n/);
   const width = Math.max(...lines.map((l) => l.length));
   const top = '┌' + '─'.repeat(width + 2) + '┐';
   const bottom = '└' + '─'.repeat(width + 2) + '┘';
-  console.log(top);
+  printInfo(top);
   for (const line of lines) {
     const padded = line.padEnd(width);
-    console.log(`│ ${padded} │`);
+    printInfo(`│ ${padded} │`);
   }
-  console.log(bottom);
+  printInfo(bottom);
 }
 
 async function collectManualResponse(): Promise<string> {
-  console.log('Paste AI response. Press Ctrl+D when done:');
+  printInfo('Paste AI response. Press Ctrl+D when done:');
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   const lines: string[] = [];
   rl.on('line', (line) => lines.push(line));
@@ -66,18 +59,18 @@ export function registerPromptCommand(program: Command): void {
       let queued = false;
       cooldown.on('cooldown:active', () => {
         queued = true;
-        console.log('🔥 Cooldown active, queued prompt');
+        printInfo('🔥 Cooldown active, queued prompt');
       });
       cooldown.on('cooldown:ended', () => {
         if (queued) {
-          console.log('✅ Prompt accepted');
+          printSuccess('Prompt accepted');
           queued = false;
         }
       });
 
       const waitLog = setTimeout(() => {
         if (queued) {
-          console.log('🕒 Waiting...');
+          printInfo('🕒 Waiting...');
         }
       }, 200);
 
@@ -102,27 +95,28 @@ export function registerPromptCommand(program: Command): void {
               fs.writeFileSync(dest, response);
               entry.bytesWritten = Buffer.byteLength(response);
               logger.info({ dest }, 'saved manual AI response');
-              console.log(chalk.green(`✅ Saved to ${destRel}`));
+              printSuccess(`File saved: ${destRel} (${entry.bytesWritten} bytes)`);
             } catch (err: any) {
               entry.error = err.message;
               logger.error({ err }, 'failed to save manual AI response');
-              console.log(chalk.red(`❌ Failed to write to ${path.basename(dest)} — see error above.`));
+              printError(`Failed to write to ${path.basename(dest)} — see error above.`);
             }
             logPaste(entry);
             if (!entry.error) {
-              console.log(chalk.blue('🧠 Logged paste to .uado/paste.log.json'));
+              printInfo('📜 Logged in: .uado/paste.log.json');
+              printInfo('🧠 Tip: Use `uado history` to view all past prompts!');
             }
             return entry.error ? `Failed to write to ${dest}` : `Saved to ${dest}`;
           }
           return fakeCallAI(text);
         });
         clearTimeout(waitLog);
-        if (!queued) {
-          console.log('✅ Prompt accepted');
-        }
-        if (cfg.mode !== 'manual') {
-          console.log(result);
-        }
+          if (!queued) {
+            printSuccess('Prompt accepted');
+          }
+          if (cfg.mode !== 'manual') {
+            printInfo(result);
+          }
       } finally {
         orchestrator.close();
       }

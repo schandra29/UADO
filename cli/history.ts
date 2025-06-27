@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { PasteLogEntry } from './logPaste';
+import { printInfo, printError, printTip } from './ui';
 
 let chalk: {
   cyan: (s: string) => string;
@@ -24,8 +25,8 @@ export function runHistoryCommand(): void {
   const logPath = path.join(process.cwd(), '.uado', 'paste.log.json');
 
   if (!fs.existsSync(logPath)) {
-    console.log('No paste history found yet.');
-    console.log('Try running `uado prompt` or `uado paste` first!');
+    printInfo('No paste history found yet.');
+    printTip('Try running `uado prompt` or `uado paste` first!');
     return;
   }
 
@@ -33,12 +34,12 @@ export function runHistoryCommand(): void {
   try {
     data = JSON.parse(fs.readFileSync(logPath, 'utf8'));
   } catch (err: any) {
-    console.log('Failed to read paste history:', err.message);
+    printError(`Failed to read paste history: ${err.message}`);
     return;
   }
 
   if (!Array.isArray(data)) {
-    console.log('Paste log is not in the expected format.');
+    printError('Paste log is not in the expected format.');
     return;
   }
 
@@ -48,22 +49,20 @@ export function runHistoryCommand(): void {
   );
 
   if (entries.length === 0) {
-    console.log('No paste history found yet.');
-    console.log('Try running `uado prompt` or `uado paste` first!');
+    printInfo('No paste history found yet.');
+    printTip('Try running `uado prompt` or `uado paste` first!');
     return;
   }
 
   for (const entry of entries) {
     const preview = entry.prompt.replace(/\s+/g, ' ').slice(0, 100);
-    console.log(`📄 ${chalk.cyan(entry.file)}`);
-    console.log(`  🕓 ${chalk.dim(entry.timestamp)}  🔠 ${entry.bytesWritten} bytes`);
-    console.log(`  🧠 ${chalk.gray(preview)}`);
+    printInfo(`📄 ${chalk.cyan(entry.file)}`);
+    printInfo(`  🕓 ${chalk.dim(entry.timestamp)}  🔠 ${entry.bytesWritten} bytes`);
+    printInfo(`  🧠 ${chalk.gray(preview)}`);
     if (typeof entry.queueIndex === 'number') {
-      console.log(`  🧾 ${chalk.yellow(String(entry.queueIndex))}`);
-      console.log(
-        chalk.dim(`  To replay this paste, run: uado replay ${entry.queueIndex}`)
-      );
+      printInfo(`  🧾 ${chalk.yellow(String(entry.queueIndex))}`);
+      printInfo(chalk.dim(`  To replay this paste, run: uado replay ${entry.queueIndex}`));
     }
-    console.log('');
+    printInfo('');
   }
 }
