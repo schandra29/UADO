@@ -3,6 +3,7 @@ import pino from 'pino';
 import { createFileWatcher } from '../core/file-watcher';
 import { createLspWatcher } from '../core/lsp-watcher';
 import { registerDashboardCommand } from './dashboard';
+import { registerPromptCommand } from './prompt';
 
 const program = new Command();
 program
@@ -32,5 +33,6 @@ program
   });
 
 registerDashboardCommand(program);
+registerPromptCommand(program);
 
 program.parse(process.argv);
