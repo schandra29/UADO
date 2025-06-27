@@ -5,6 +5,7 @@ import { createLspWatcher } from '../core/lsp-watcher';
 import { loadConfig } from '../core/config-loader';
 import { registerDashboardCommand } from './dashboard';
 import { registerPromptCommand } from './prompt';
+import { runHistoryCommand } from './history';
 
 const program = new Command();
 program
@@ -38,5 +39,9 @@ program
 
 registerDashboardCommand(program);
 registerPromptCommand(program);
+program
+  .command('history')
+  .description('Show paste history')
+  .action(runHistoryCommand);
 
 program.parse(process.argv);
