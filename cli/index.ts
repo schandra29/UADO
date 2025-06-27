@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import pino from 'pino';
 import { createFileWatcher } from '../core/file-watcher';
+import { createLspWatcher } from '../core/lsp-watcher';
 
 const program = new Command();
 program
@@ -15,9 +16,17 @@ program
     logger.info('Starting file watcher...');
 
     const watcher = createFileWatcher({ logger });
+    const lspWatcher = createLspWatcher({ logger });
 
     watcher.on('hotState', () => {
       logger.info('hotState event received');
+    });
+
+    lspWatcher.on('lsphot', () => {
+      logger.info('lsphot event received');
+    });
+    lspWatcher.on('lspready', () => {
+      logger.info('lspready event received');
     });
   });
 
