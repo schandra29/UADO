@@ -21,19 +21,21 @@ uado dashboard
 
 ### Configuration
 
-Create a `.uadorc.json` in your project root to tweak cooldown behavior:
+Create a `.uadorc.json` in your project root to tweak cooldown behavior and set execution mode:
 
 ```json
 {
   "cooldownDurationMs": 90000,
   "stabilityWindowMs": 5000,
-  "logLevel": "info"
+  "logLevel": "info",
+  "mode": "manual"
 }
 ```
 
 - `cooldownDurationMs` – maximum time to stay in cooldown after a file change
 - `stabilityWindowMs` – how long to wait for file stability after the LSP signals readiness
 - `logLevel` – `info`, `debug`, or `silent`
+- `mode` – `manual` for copy/paste mode (used by default if no config file is found)
 
 ### In your own code
 
