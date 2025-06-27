@@ -4,9 +4,18 @@ import path from 'path';
 import readline from 'readline';
 import { once } from 'events';
 import pino from 'pino';
+import { logPaste, PasteLogEntry } from './logPaste';
 import { createCooldownEngine } from '../core/cooldown-engine';
 import { createOrchestrator } from '../core/orchestrator';
 import { loadConfig } from '../core/config-loader';
+
+let chalk: { green: (s: string) => string; red: (s: string) => string; blue: (s: string) => string };
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  chalk = require('chalk');
+} catch {
+  chalk = { green: (s: string) => s, red: (s: string) => s, blue: (s: string) => s };
+}
 
 function printPromptBox(text: string): void {
   const lines = text.split(/\r?\n/);
@@ -78,9 +87,32 @@ export function registerPromptCommand(program: Command): void {
             printPromptBox(text);
             const response = await collectManualResponse();
             const dest = path.join(process.cwd(), 'src/components/ui/MusicShareCard.tsx');
-            fs.writeFileSync(dest, response);
-            logger.info({ dest }, 'saved manual AI response');
-            return `Saved to ${dest}`;
+            const destRel = path.relative(process.cwd(), dest);
+            const wasOverwrite = fs.existsSync(dest);
+            const entry: PasteLogEntry = {
+              timestamp: new Date().toISOString(),
+              file: destRel,
+              bytesWritten: 0,
+              prompt: text,
+              queueIndex: 1,
+              wasOverwrite
+            };
+            try {
+              fs.mkdirSync(path.dirname(dest), { recursive: true });
+              fs.writeFileSync(dest, response);
+              entry.bytesWritten = Buffer.byteLength(response);
+              logger.info({ dest }, 'saved manual AI response');
+              console.log(chalk.green(`✅ Saved to ${destRel}`));
+            } catch (err: any) {
+              entry.error = err.message;
+              logger.error({ err }, 'failed to save manual AI response');
+              console.log(chalk.red(`❌ Failed to write to ${path.basename(dest)} — see error above.`));
+            }
+            logPaste(entry);
+            if (!entry.error) {
+              console.log(chalk.blue('🧠 Logged paste to .uado/paste.log.json'));
+            }
+            return entry.error ? `Failed to write to ${dest}` : `Saved to ${dest}`;
           }
           return fakeCallAI(text);
         });
@@ -88,7 +120,9 @@ export function registerPromptCommand(program: Command): void {
         if (!queued) {
           console.log('✅ Prompt accepted');
         }
-        console.log(result);
+        if (cfg.mode !== 'manual') {
+          console.log(result);
+        }
       } finally {
         orchestrator.close();
       }
