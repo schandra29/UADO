@@ -1,0 +1,26 @@
+[
+  {
+    "timestamp": "2024-01-01T00:00:00.000Z",
+    "file": "fileA.ts",
+    "bytesWritten": 10,
+    "prompt": "Mock prompt",
+    "queueIndex": 1,
+    "wasOverwrite": false
+  },
+  {
+    "timestamp": "2024-01-01T00:00:00.000Z",
+    "file": "fileB.ts",
+    "bytesWritten": 10,
+    "prompt": "Mock prompt",
+    "queueIndex": 1,
+    "wasOverwrite": false
+  },
+  {
+    "timestamp": "2024-01-01T00:00:00.000Z",
+    "file": "fileC.ts",
+    "bytesWritten": 10,
+    "prompt": "Mock prompt",
+    "queueIndex": 1,
+    "wasOverwrite": false
+  }
+]
