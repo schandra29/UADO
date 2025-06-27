@@ -1,0 +1,18 @@
+📄 fileA.ts
+  🕓 2024-01-01T00:00:00.000Z  🔠 10 bytes
+  🧠 Mock prompt
+  🧾 1
+  To replay this paste, run: uado replay 1
+
+📄 fileB.ts
+  🕓 2024-01-01T00:00:00.000Z  🔠 10 bytes
+  🧠 Mock prompt
+  🧾 1
+  To replay this paste, run: uado replay 1
+
+📄 fileC.ts
+  🕓 2024-01-01T00:00:00.000Z  🔠 10 bytes
+  🧠 Mock prompt
+  🧾 1
+  To replay this paste, run: uado replay 1
+

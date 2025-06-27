@@ -8,6 +8,7 @@ import { loadConfig } from '../core/config-loader';
 import { registerDashboardCommand } from './dashboard';
 import { registerPromptCommand } from './prompt';
 import { runHistoryCommand } from './history';
+import { registerTestCommand } from './test';
 import { printInfo } from './ui';
 
 const program = new Command();
@@ -42,6 +43,7 @@ program
 
 registerDashboardCommand(program);
 registerPromptCommand(program);
+registerTestCommand(program);
 program
   .command('history')
   .description('Show paste history')
