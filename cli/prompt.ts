@@ -1,8 +1,34 @@
 import { Command } from 'commander';
+import fs from 'fs';
+import path from 'path';
+import readline from 'readline';
+import { once } from 'events';
 import pino from 'pino';
 import { createCooldownEngine } from '../core/cooldown-engine';
 import { createOrchestrator } from '../core/orchestrator';
 import { loadConfig } from '../core/config-loader';
+
+function printPromptBox(text: string): void {
+  const lines = text.split(/\r?\n/);
+  const width = Math.max(...lines.map((l) => l.length));
+  const top = '┌' + '─'.repeat(width + 2) + '┐';
+  const bottom = '└' + '─'.repeat(width + 2) + '┘';
+  console.log(top);
+  for (const line of lines) {
+    const padded = line.padEnd(width);
+    console.log(`│ ${padded} │`);
+  }
+  console.log(bottom);
+}
+
+async function collectManualResponse(): Promise<string> {
+  console.log('Paste AI response. Press Ctrl+D when done:');
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const lines: string[] = [];
+  rl.on('line', (line) => lines.push(line));
+  await once(rl, 'close');
+  return lines.join('\n');
+}
 
 export function registerPromptCommand(program: Command): void {
   program
@@ -47,7 +73,17 @@ export function registerPromptCommand(program: Command): void {
       }, 200);
 
       try {
-        const result = await orchestrator.wrapPrompt(() => fakeCallAI(text));
+        const result = await orchestrator.wrapPrompt(async () => {
+          if (cfg.mode === 'manual') {
+            printPromptBox(text);
+            const response = await collectManualResponse();
+            const dest = path.join(process.cwd(), 'src/components/ui/MusicShareCard.tsx');
+            fs.writeFileSync(dest, response);
+            logger.info({ dest }, 'saved manual AI response');
+            return `Saved to ${dest}`;
+          }
+          return fakeCallAI(text);
+        });
         clearTimeout(waitLog);
         if (!queued) {
           console.log('✅ Prompt accepted');
