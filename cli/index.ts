@@ -1,4 +1,6 @@
 import { Command } from 'commander';
+import fs from 'fs';
+import path from 'path';
 import pino from 'pino';
 import { createFileWatcher } from '../core/file-watcher';
 import { createLspWatcher } from '../core/lsp-watcher';
@@ -6,6 +8,7 @@ import { loadConfig } from '../core/config-loader';
 import { registerDashboardCommand } from './dashboard';
 import { registerPromptCommand } from './prompt';
 import { runHistoryCommand } from './history';
+import { printInfo } from './ui';
 
 const program = new Command();
 program
@@ -43,5 +46,36 @@ program
   .command('history')
   .description('Show paste history')
   .action(runHistoryCommand);
-
+maybeShowWelcome();
 program.parse(process.argv);
+
+function maybeShowWelcome(): void {
+  const dir = path.join(process.cwd(), '.uado');
+  const flagPath = path.join(dir, '.first-run.json');
+  const logPath = path.join(dir, 'paste.log.json');
+
+  let shown = false;
+  try {
+    const data = JSON.parse(fs.readFileSync(flagPath, 'utf8')) as {
+      shown?: boolean;
+    };
+    shown = data.shown === true;
+  } catch {
+    shown = false;
+  }
+
+  if (!shown && (!fs.existsSync(dir) || !fs.existsSync(logPath))) {
+    printInfo('\n🎉 Welcome to UADO CLI!');
+    printInfo('📂 A new `.uado/` folder will be created for your paste history.');
+    printInfo('🧠 Run `uado history` to browse past prompts and files.\n');
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(
+        flagPath,
+        JSON.stringify({ shown: true, firstRunAt: new Date().toISOString() }, null, 2)
+      );
+    } catch {
+      // ignore errors
+    }
+  }
+}
