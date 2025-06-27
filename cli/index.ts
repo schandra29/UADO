@@ -2,19 +2,23 @@ import { Command } from 'commander';
 import pino from 'pino';
 import { createFileWatcher } from '../core/file-watcher';
 import { createLspWatcher } from '../core/lsp-watcher';
+import { loadConfig } from '../core/config-loader';
 import { registerDashboardCommand } from './dashboard';
 import { registerPromptCommand } from './prompt';
 
 const program = new Command();
 program
   .name('uado')
-  .description('Universal AI Development Orchestrator');
+  .description('Universal AI Development Orchestrator')
+  .option('-c, --config <path>', 'path to config file');
 
 program
   .command('watch')
   .description('Watch project files and emit hot state events')
-  .action(() => {
-    const logger = pino({ name: 'uado' });
+  .action(function () {
+    const { config: configPath } = this.optsWithGlobals();
+    const cfg = loadConfig(configPath);
+    const logger = pino({ name: 'uado', level: cfg.logLevel });
     logger.info('Starting file watcher...');
 
     const watcher = createFileWatcher({ logger });
