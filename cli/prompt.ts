@@ -2,14 +2,21 @@ import { Command } from 'commander';
 import pino from 'pino';
 import { createCooldownEngine } from '../core/cooldown-engine';
 import { createOrchestrator } from '../core/orchestrator';
+import { loadConfig } from '../core/config-loader';
 
 export function registerPromptCommand(program: Command): void {
   program
     .command('prompt <text>')
     .description('Send a test prompt through the orchestrator')
-    .action(async (text: string) => {
-      const logger = pino({ name: 'uado' });
-      const cooldown = createCooldownEngine({ logger });
+    .action(async function (text: string) {
+      const { config: configPath } = this.optsWithGlobals();
+      const cfg = loadConfig(configPath);
+      const logger = pino({ name: 'uado', level: cfg.logLevel });
+      const cooldown = createCooldownEngine({
+        logger,
+        timeoutMs: cfg.cooldownDurationMs,
+        stableWindowMs: cfg.stabilityWindowMs
+      });
       const orchestrator = createOrchestrator({ cooldownEmitter: cooldown, logger });
 
       const fakeCallAI = (input: string): Promise<string> =>

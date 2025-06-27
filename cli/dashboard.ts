@@ -3,18 +3,25 @@ import pino from 'pino';
 import { createFileWatcher } from '../core/file-watcher';
 import { createLspWatcher } from '../core/lsp-watcher';
 import { createCooldownEngine } from '../core/cooldown-engine';
+import { loadConfig } from '../core/config-loader';
 
 export function registerDashboardCommand(program: Command): void {
   program
     .command('dashboard')
     .description('Run live dashboard with system diagnostic signals')
-    .action(() => {
-      const logger = pino({ name: 'uado' });
+    .action(function () {
+      const { config: configPath } = this.optsWithGlobals();
+      const cfg = loadConfig(configPath);
+      const logger = pino({ name: 'uado', level: cfg.logLevel });
       logger.info('Starting dashboard...');
 
       const fileWatcher = createFileWatcher({ logger });
       const lspWatcher = createLspWatcher({ logger });
-      const cooldown = createCooldownEngine({ logger });
+      const cooldown = createCooldownEngine({
+        logger,
+        timeoutMs: cfg.cooldownDurationMs,
+        stableWindowMs: cfg.stabilityWindowMs
+      });
 
       // Forward watcher events to cooldown engine
       fileWatcher.on('hotState', () => {
@@ -44,8 +51,8 @@ export function registerDashboardCommand(program: Command): void {
       let lastEvent = '';
       let cooldownEndsAt = 0;
       const recentEvents: Array<{ ts: Date; event: string }> = [];
-      const timeoutMs = 90_000;
-      const stableWindowMs = 5_000;
+      const timeoutMs = cfg.cooldownDurationMs;
+      const stableWindowMs = cfg.stabilityWindowMs;
 
       const recordEvent = (event: string): void => {
         lastEvent = event;
