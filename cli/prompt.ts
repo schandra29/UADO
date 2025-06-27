@@ -4,7 +4,7 @@ import path from 'path';
 import readline from 'readline';
 import { once } from 'events';
 import pino from 'pino';
-import { logPaste, PasteLogEntry } from './logPaste';
+import { logPaste, PasteLogEntry, PasteQueueEntry, logQueueEntry } from './logPaste';
 import { createCooldownEngine } from '../core/cooldown-engine';
 import { createOrchestrator } from '../core/orchestrator';
 import { loadConfig } from '../core/config-loader';
@@ -34,12 +34,47 @@ async function collectManualResponse(): Promise<string> {
 
 export function registerPromptCommand(program: Command): void {
   program
-    .command('prompt <text>')
+    .command('prompt [text]')
     .description('Send a test prompt through the orchestrator')
-    .action(async function (text: string) {
-      const { config: configPath } = this.optsWithGlobals();
+    .option('--simulate-queue', 'Simulate queue logging')
+    .action(async function (text?: string) {
+      const { config: configPath, simulateQueue } = this.optsWithGlobals();
       const cfg = loadConfig(configPath);
       const logger = pino({ name: 'uado', level: cfg.logLevel });
+
+      if (simulateQueue) {
+        const files = ['foo.ts', 'bar.ts', 'baz.ts'];
+        const entries: PasteLogEntry[] = [];
+        for (const file of files) {
+          const entry: PasteLogEntry = {
+            timestamp: new Date().toISOString(),
+            file,
+            bytesWritten: Math.floor(Math.random() * 200) + 1,
+            prompt: 'Simulated batch paste for queue testing',
+            queueIndex: 0,
+            wasOverwrite: false
+          };
+          logPaste(entry);
+          entries.push(entry);
+          printInfo(`📝 Simulated paste logged: ${file}`);
+        }
+
+        const qEntry: PasteQueueEntry = {
+          queueIndex: 0,
+          prompt: 'Simulated batch paste for queue testing',
+          timestamp: new Date().toISOString(),
+          files: entries
+        };
+        logQueueEntry(qEntry);
+        printSuccess('Simulated queue entry logged.');
+        return;
+      }
+
+      if (!text) {
+        printError('No prompt text provided.');
+        return;
+      }
+
       const cooldown = createCooldownEngine({
         logger,
         timeoutMs: cfg.cooldownDurationMs,
