@@ -76,6 +76,21 @@ Use `uado patterns suggest "your prompt"` to view the top matches without genera
 
 When pattern injection is enabled, every successful manual paste automatically adds an entry to `.uado/patterns.json`. Use `--tag <label>` with `uado prompt` to categorize the pattern. Over time this file will grow with examples grouped by tag, improving future suggestions.
 
+To review what a stored pattern does, run:
+
+```bash
+uado patterns explain react-component
+```
+
+Sample output:
+
+```text
+[react-component]
+Prompt: Create a header component
+Snippet: <header>...</header>
+Explanation: This pattern builds a React component based on the prompt "Create a header component".
+```
+
 ## Project Structure
 ```
 cli/       # command implementations
