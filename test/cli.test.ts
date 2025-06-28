@@ -33,9 +33,67 @@ function testHistoryOutput(tmpDir: string): TestResult {
   return { name: 'test-history', passed, message: passed ? undefined : 'output mismatch' };
 }
 
+function writePatterns(dir: string): void {
+  const patterns = [
+    {
+      prompt: 'Create a React button',
+      file: 'src/Button.tsx',
+      outputSnippet: '<button>...</button>',
+      tag: 'react-component'
+    },
+    {
+      prompt: 'Create React header',
+      file: 'src/Header.tsx',
+      outputSnippet: '<header>...</header>',
+      tag: 'react-component'
+    },
+    {
+      prompt: 'Utility fn',
+      file: 'src/util.ts',
+      outputSnippet: 'export function',
+      tag: 'utility'
+    }
+  ];
+  const pdir = path.join(dir, '.uado');
+  fs.mkdirSync(pdir, { recursive: true });
+  fs.writeFileSync(
+    path.join(pdir, 'patterns.json'),
+    JSON.stringify(patterns, null, 2)
+  );
+}
+
+function testExplainMissingTag(tmpDir: string): TestResult {
+  const res = runCmd(['patterns', 'explain'], tmpDir);
+  const passed = res.status !== 0;
+  return { name: 'patterns-missing-tag', passed, message: passed ? undefined : 'expected failure' };
+}
+
+function testExplainUnknownTag(tmpDir: string): TestResult {
+  writePatterns(tmpDir);
+  const res = runCmd(['patterns', 'explain', 'nope'], tmpDir);
+  const passed = res.stdout.includes('No patterns found for tag');
+  return { name: 'patterns-unknown-tag', passed, message: passed ? undefined : 'unexpected output' };
+}
+
+function testExplainFilter(tmpDir: string): TestResult {
+  writePatterns(tmpDir);
+  const res = runCmd(['patterns', 'explain', 'react-component'], tmpDir);
+  const hasButton = res.stdout.includes('Create a React button');
+  const hasHeader = res.stdout.includes('Create React header');
+  const noUtil = !res.stdout.includes('Utility fn');
+  const passed = hasButton && hasHeader && noUtil;
+  return { name: 'patterns-filter', passed, message: passed ? undefined : 'filter mismatch' };
+}
+
 function main(): void {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'uado-test-'));
-  const results = [testMockPaste(tmpDir), testHistoryOutput(tmpDir)];
+  const results = [
+    testMockPaste(tmpDir),
+    testHistoryOutput(tmpDir),
+    testExplainMissingTag(tmpDir),
+    testExplainUnknownTag(tmpDir),
+    testExplainFilter(tmpDir)
+  ];
 
   for (const r of results) {
     if (r.passed) {
