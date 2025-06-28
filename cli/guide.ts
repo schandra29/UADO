@@ -6,10 +6,11 @@ import { spawnSync } from 'child_process';
 import { printInfo, printSuccess, printError, printTip } from './ui';
 import { PatternEntry } from '../utils/matchPatterns';
 import { logPattern } from './logPattern';
+import { getDifficulty, Difficulty } from '../lib/user-level';
 
 const SCENARIOS = ['utility', 'debug', 'refactor'];
 
-function getExamples(tag: string): PatternEntry[] {
+function getExamples(tag: string, level: Difficulty): PatternEntry[] {
   const patternsPath = path.join(process.cwd(), '.uado', 'patterns.json');
   if (!fs.existsSync(patternsPath)) return [];
 
@@ -24,7 +25,9 @@ function getExamples(tag: string): PatternEntry[] {
         if (Array.isArray(arr)) entries = entries.concat(arr);
       }
     }
-    return entries.filter((e) => e.tag === tag);
+    return entries.filter(
+      (e) => e.tag === tag && (e.difficulty ?? 'beginner') === level
+    );
   } catch {
     return [];
   }
@@ -56,7 +59,8 @@ export function registerGuideCommand(program: Command): void {
 
       printInfo(`\n🟢 Starting guide for "${scenario}"...`);
 
-      const examples = getExamples(scenario);
+      const level = getDifficulty();
+      const examples = getExamples(scenario, level);
       printInfo('\nStep 1/3: Example prompts');
       if (examples.length === 0) {
         printInfo('No saved examples yet.');
@@ -92,7 +96,7 @@ export function registerGuideCommand(program: Command): void {
         });
       });
       if (worked === 'y' || worked === 'yes') {
-        logPattern(finalPrompt, `guide/${scenario}.txt`, '', scenario);
+        logPattern(finalPrompt, `guide/${scenario}.txt`, '', scenario, level);
         printSuccess('Great! Example logged for future suggestions.');
       } else {
         printInfo('Thanks for trying the guide!');

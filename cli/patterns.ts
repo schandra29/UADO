@@ -85,7 +85,8 @@ export function registerPatternsCommand(program: Command): void {
       }
 
       for (const entry of filtered) {
-        printInfo(`[${entry.tag ?? 'general'}]`);
+        const diff = entry.difficulty ?? 'beginner';
+        printInfo(`[${entry.tag ?? 'general'}] (${diff})`);
         printInfo(`Prompt: ${entry.prompt}`);
         printInfo(`Snippet: ${entry.outputSnippet}`);
         printInfo(`Explanation: ${explainPattern(entry)}`);

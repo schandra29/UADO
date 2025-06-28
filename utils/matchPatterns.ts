@@ -3,6 +3,7 @@ export interface PatternEntry {
   file: string;
   outputSnippet: string;
   tag?: string;
+  difficulty?: string;
   hash?: string;
 }
 

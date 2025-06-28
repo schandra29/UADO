@@ -15,6 +15,7 @@ import { runReplayCommand } from './replay';
 import { registerStatusCommand } from './status';
 import { registerVersionCommand } from './version';
 import { registerConfigCommand } from './config';
+import { registerLevelCommand } from './level';
 
 import { printInfo, setUseEmoji } from './ui';
 
@@ -58,6 +59,7 @@ registerTestCommand(program);
 registerStatusCommand(program);
 registerVersionCommand(program);
 registerConfigCommand(program);
+registerLevelCommand(program);
 program
   .command('history')
   .description('Show paste history')

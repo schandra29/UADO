@@ -9,7 +9,7 @@ import { logPattern } from './logPattern';
 import { createCooldownEngine } from '../core/cooldown-engine';
 import { createOrchestrator } from '../core/orchestrator';
 import { loadConfig } from '../core/config-loader';
-import { printSuccess, printError, printInfo } from './ui';
+import { printSuccess, printError, printInfo, printTip } from './ui';
 import { runGuardrails } from './guardrails';
 import { sleep } from '../lib/utils/sleep';
 import { findBestMatches, PatternEntry } from '../utils/matchPatterns';
@@ -17,6 +17,7 @@ import { computeHash } from '../utils/hash';
 import { saveSnapshot } from './snapshot';
 import { validateCode } from './validate';
 import { logReview } from './logReview';
+import { getDifficulty, incrementCount, Difficulty } from '../lib/user-level';
 
 function printPromptBox(text: string): void {
   const lines = text.split(/\r?\n/);
@@ -47,9 +48,19 @@ export function registerPromptCommand(program: Command): void {
     .option('--simulate-queue', 'Simulate queue logging')
     .option('--dry-run', 'Simulate file writes without saving')
     .option('--tag <tag>', 'tag for pattern logging')
+    .option('--difficulty <level>', 'beginner|intermediate|advanced')
     .option('--force', 'Write even if linting fails')
     .action(async function (text?: string) {
-      const { config: configPath, simulateQueue, tag, noGuardrails, dryRun, force } = this.optsWithGlobals();
+      const {
+        config: configPath,
+        simulateQueue,
+        tag,
+        difficulty: diffOpt,
+        noGuardrails,
+        dryRun,
+        force
+      } = this.optsWithGlobals();
+      const level: Difficulty = (diffOpt as Difficulty) || getDifficulty();
       const cfg = loadConfig(configPath);
       const logger = pino({ name: 'uado', level: cfg.logLevel });
       const startTime = Date.now();
@@ -104,10 +115,16 @@ export function registerPromptCommand(program: Command): void {
               if (Array.isArray(arr)) patterns = patterns.concat(arr);
             }
           }
-          const matches = findBestMatches(text, patterns, 2);
+          const filtered = patterns.filter(
+            (p) => (p.difficulty ?? 'beginner') === level
+          );
+          const matches = findBestMatches(text, filtered, 2);
           if (matches.length > 0) {
             const injection = matches
-              .map((m) => `Prompt: ${m.prompt}\nOutput:\n${m.outputSnippet}`)
+              .map(
+                (m) =>
+                  `Prompt: ${m.prompt}\nDifficulty: ${m.difficulty}\nOutput:\n${m.outputSnippet}`
+              )
               .join('\n---\n');
             text = `${injection}\n\n${text}`;
             logger.info(
@@ -222,7 +239,15 @@ export function registerPromptCommand(program: Command): void {
             if (!entry.error) {
               if (cfg.enablePatternInjection) {
                 const snippet = response.slice(0, 200);
-                logPattern(originalText, destRel, snippet, tag);
+                logPattern(originalText, destRel, snippet, tag, level);
+                const count = incrementCount(level);
+                if (count % 5 === 0 && level !== 'advanced') {
+                  printTip(
+                    `You've completed ${count} ${level} prompts. Try upgrading to ${
+                      level === 'beginner' ? 'intermediate' : 'advanced'
+                    }?`
+                  );
+                }
                 printInfo('📈 Pattern added to .uado/patterns.json');
               }
               printInfo('📜 Logged in: .uado/paste.log.json');

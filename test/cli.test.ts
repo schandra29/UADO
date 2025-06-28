@@ -43,19 +43,22 @@ function writePatterns(dir: string): void {
       prompt: 'Create a React button',
       file: 'src/Button.tsx',
       outputSnippet: '<button>...</button>',
-      tag: 'react-component'
+      tag: 'react-component',
+      difficulty: 'beginner'
     },
     {
       prompt: 'Create React header',
       file: 'src/Header.tsx',
       outputSnippet: '<header>...</header>',
-      tag: 'react-component'
+      tag: 'react-component',
+      difficulty: 'beginner'
     },
     {
       prompt: 'Utility fn',
       file: 'src/util.ts',
       outputSnippet: 'export function',
-      tag: 'utility'
+      tag: 'utility',
+      difficulty: 'beginner'
     }
   ];
   const pdir = path.join(dir, '.uado');
