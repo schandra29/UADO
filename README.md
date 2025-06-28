@@ -12,6 +12,7 @@
 - Styled CLI output with optional emoji icons
 - Pattern-aware prompt injection from `.uado/patterns.json`
 - Automatic pattern logging when prompts succeed
+- Interactive `guide` command for beginner workflows
 
 ## Installation
 ```bash
@@ -33,6 +34,10 @@ uado dashboard
 
 # Show paste history
 uado history
+
+# Start an interactive guide
+uado guide utility
+# Supported scenarios: `utility`, `debug`, `refactor`
 
 # Replay a queue entry
 uado replay <index>
