@@ -15,6 +15,7 @@
 - Automatic pattern logging when prompts succeed
 - Interactive `guide` command for beginner workflows
 - Beginner guardrails for common project pitfalls
+- Progressive difficulty levels with `uado level` and `--difficulty`
 
 ## Installation
 ```bash
@@ -31,8 +32,10 @@ uado replay 1                 # restore the first queue entry
 
 # Other commands
 uado prompt --simulate-queue "test"
+uado prompt --difficulty intermediate "Add docs"
 uado dashboard
 uado history
+uado level advanced
 uado test run
 uado status
 uado config
@@ -65,14 +68,19 @@ Create a `.uadorc.json` in your project root to tweak cooldown behavior and set 
 Store successful examples in `.uado/patterns.json`:
 ```json
 [
-  { "prompt": "Create a header component", "file": "src/Header.tsx", "outputSnippet": "<header>...</header>" }
+  {
+    "prompt": "Create a header component",
+    "file": "src/Header.tsx",
+    "outputSnippet": "<header>...</header>",
+    "difficulty": "beginner"
+  }
 ]
 ```
 Enable the feature in `.uadorc.json` by setting `"enablePatternInjection": true`.
 When enabled, `uado prompt` will prepend the most similar examples to your prompt.
 Use `uado patterns suggest "your prompt"` to view the top matches without generating code.
 
-When pattern injection is enabled, every successful manual paste automatically adds an entry to `.uado/patterns.json`. Use `--tag <label>` with `uado prompt` to categorize the pattern. Over time this file will grow with examples grouped by tag, improving future suggestions.
+When pattern injection is enabled, every successful manual paste automatically adds an entry to `.uado/patterns.json`. Use `--tag <label>` with `uado prompt` to categorize the pattern. Each entry stores the difficulty level so suggestions match your experience. Over time this file will grow with examples grouped by tag, improving future suggestions.
 
 To review what a stored pattern does, run:
 
@@ -83,7 +91,7 @@ uado patterns explain react-component
 Sample output:
 
 ```text
-[react-component]
+[react-component] (beginner)
 Prompt: Create a header component
 Snippet: <header>...</header>
 Explanation: This pattern builds a React component based on the prompt "Create a header component".

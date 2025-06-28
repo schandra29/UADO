@@ -8,6 +8,7 @@ export interface PatternEntry {
   file: string;
   outputSnippet: string;
   tag: string;
+  difficulty: string;
   hash: string;
 }
 
@@ -23,7 +24,8 @@ export function logPattern(
   prompt: string,
   file: string,
   outputSnippet: string,
-  tag = 'general'
+  tag = 'general',
+  difficulty = 'beginner'
 ): void {
   const dir = path.join(process.cwd(), '.uado');
   const patternsPath = path.join(dir, 'patterns.json');
@@ -65,7 +67,7 @@ export function logPattern(
     return;
   }
 
-  const entry: PatternEntry = { prompt, file, outputSnippet, tag, hash };
+  const entry: PatternEntry = { prompt, file, outputSnippet, tag, difficulty, hash };
   if (!Array.isArray(data[tag])) data[tag] = [];
   data[tag].push(entry);
 
