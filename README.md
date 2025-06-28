@@ -13,6 +13,8 @@
 - Styled CLI output with optional emoji icons
 - Pattern-aware prompt injection from `.uado/patterns.json`
 - Automatic pattern logging when prompts succeed
+- `star` command to bookmark past prompts
+- `starred` list with `suggest` and `diff`
 - Interactive `guide` command for beginner workflows
 - Beginner guardrails for common project pitfalls
 - Progressive difficulty levels with `uado level` and `--difficulty`
@@ -29,6 +31,10 @@ uado guide utility            # learn the basics
 uado prompt --tag demo "Make a button"
 # review snapshot under .uado/snapshots/
 uado replay 1                 # restore the first queue entry
+uado star 1                   # bookmark entry #1
+uado starred                  # list saved examples
+uado suggest "new prompt"     # show similar stars
+uado diff 1                   # diff latest with star #1
 
 # Other commands
 uado prompt --simulate-queue "test"
@@ -111,6 +117,7 @@ Pass `--no-guardrails` to bypass these checks if needed.
 - Use `--dry-run` with `prompt` or `replay` to preview file writes without touching disk (internal flag).
 - Guardrails can be disabled with `--no-guardrails` when you know it's safe.
 - Generated snapshots live under `.uado/snapshots/` and include the prompt hash in their name.
+- Starred examples are stored in `.uado/starred.json` and follow `prompt.schema.json`.
 
 ## Project Structure
 ```

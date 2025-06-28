@@ -11,7 +11,7 @@ function tokenize(text: string): string[] {
   return text.toLowerCase().split(/\W+/).filter(Boolean);
 }
 
-function cosineSimilarity(a: string, b: string): number {
+export function cosineSimilarity(a: string, b: string): number {
   const aTokens = tokenize(a);
   const bTokens = tokenize(b);
   const countsA: Record<string, number> = {};

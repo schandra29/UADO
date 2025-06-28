@@ -12,7 +12,8 @@ import { loadConfig } from '../core/config-loader';
 import { printSuccess, printError, printInfo, printTip } from './ui';
 import { runGuardrails } from './guardrails';
 import { sleep } from '../lib/utils/sleep';
-import { findBestMatches, PatternEntry } from '../utils/matchPatterns';
+import { findBestMatches, PatternEntry, cosineSimilarity } from '../utils/matchPatterns';
+import { StarredEntry } from './star';
 import { computeHash } from '../utils/hash';
 import { saveSnapshot } from './snapshot';
 import { validateCode } from './validate';
@@ -101,6 +102,24 @@ export function registerPromptCommand(program: Command): void {
 
       const originalText = text;
       if (cfg.enablePatternInjection) {
+        try {
+          const starPath = path.join(process.cwd(), '.uado', 'starred.json');
+          const rawStar = fs.readFileSync(starPath, 'utf8');
+          const starred = JSON.parse(rawStar) as StarredEntry[];
+          const scored = starred
+            .map((s) => ({ score: cosineSimilarity(text!, s.prompt), entry: s }))
+            .filter((s) => s.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 2);
+          if (scored.length > 0) {
+            printInfo('⭐ Similar starred prompts:');
+            for (const s of scored) {
+              printInfo(`- ${s.entry.prompt}`);
+            }
+          }
+        } catch {
+          // ignore
+        }
         const patternsPath = path.join(process.cwd(), '.uado', 'patterns.json');
         try {
           const raw = fs.readFileSync(patternsPath, 'utf8');
