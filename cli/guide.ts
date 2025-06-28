@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import { spawnSync } from 'child_process';
-import { printInfo, printSuccess, printError } from './ui';
+import { printInfo, printSuccess, printError, printTip } from './ui';
 import { PatternEntry } from '../utils/matchPatterns';
 import { logPattern } from './logPattern';
 
@@ -50,6 +50,7 @@ export function registerGuideCommand(program: Command): void {
     .action(async function (scenario: string) {
       if (!SCENARIOS.includes(scenario)) {
         printError('Unknown scenario. Supported: utility, debug, refactor');
+        printTip('Run `uado guide utility` to try the basic flow.');
         return;
       }
 

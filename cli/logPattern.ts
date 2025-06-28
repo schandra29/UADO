@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { printWarn } from './ui';
 
 export interface PatternEntry {
   prompt: string;
@@ -51,7 +52,18 @@ export function logPattern(
   const hash = hashPrompt(prompt);
 
   const entries = Object.values(data).flat();
-  if (entries.some((e) => e.hash === hash)) return;
+  if (!outputSnippet.trim()) {
+    printWarn('Pattern logging skipped: output snippet is empty.');
+    return;
+  }
+  if (!tag.trim()) {
+    printWarn('Pattern logging skipped: tag is required.');
+    return;
+  }
+  if (entries.some((e) => e.hash === hash)) {
+    printWarn('Pattern already exists. Skipping duplicate.');
+    return;
+  }
 
   const entry: PatternEntry = { prompt, file, outputSnippet, tag, hash };
   if (!Array.isArray(data[tag])) data[tag] = [];

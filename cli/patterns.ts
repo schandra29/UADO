@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
-import { printError, printInfo } from './ui';
+import { printError, printInfo, printTip } from './ui';
 import { findBestMatches, PatternEntry } from '../utils/matchPatterns';
 import { explainPattern } from '../utils/explainPattern';
 
@@ -18,6 +18,7 @@ export function registerPatternsCommand(program: Command): void {
         raw = JSON.parse(fs.readFileSync(patternsPath, 'utf8'));
       } catch (err: any) {
         printError(`Failed to read patterns: ${err.message}`);
+        printTip('Try generating patterns using `uado guide` or `uado prompt --tag` first.');
         return;
       }
 
@@ -30,6 +31,7 @@ export function registerPatternsCommand(program: Command): void {
         }
       } else {
         printError('patterns.json is not in the expected format.');
+        printTip('You can delete it and re-run `uado guide` to regenerate.');
         return;
       }
 
@@ -58,6 +60,7 @@ export function registerPatternsCommand(program: Command): void {
         raw = JSON.parse(fs.readFileSync(patternsPath, 'utf8'));
       } catch (err: any) {
         printError(`Failed to read patterns: ${err.message}`);
+        printTip('Run `uado guide` to create your first pattern examples.');
         return;
       }
 
@@ -70,12 +73,14 @@ export function registerPatternsCommand(program: Command): void {
         }
       } else {
         printError('patterns.json is not in the expected format.');
+        printTip('Delete the file and re-run `uado guide` to start fresh.');
         return;
       }
 
       const filtered = all.filter((p) => p.tag === tag);
       if (filtered.length === 0) {
         printInfo(`No patterns found for tag "${tag}".`);
+        printTip(`Add one using \`uado prompt --tag ${tag} <text>\``);
         return;
       }
 

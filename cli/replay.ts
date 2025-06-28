@@ -13,7 +13,12 @@ export interface QueueLogEntry {
   files: Array<PasteLogEntry & { output?: string }>;
 }
 
-export async function runReplayCommand(indexStr: string, configPath?: string, bypassGuardrails?: boolean): Promise<void> {
+export async function runReplayCommand(
+  indexStr: string,
+  configPath?: string,
+  bypassGuardrails?: boolean,
+  dryRun?: boolean
+): Promise<void> {
   const index = parseInt(indexStr, 10);
   if (Number.isNaN(index)) {
     printError('Invalid queue index');
@@ -55,6 +60,10 @@ export async function runReplayCommand(indexStr: string, configPath?: string, by
 
     try {
       runGuardrails({ snippets: [file.output || ''], bypass: bypassGuardrails });
+      if (dryRun) {
+        printInfo(`[dry-run] Would restore: ./${file.file} (${file.bytesWritten} bytes)`);
+        continue;
+      }
       fs.mkdirSync(path.dirname(dest), { recursive: true });
       fs.writeFileSync(dest, file.output || '');
       printSuccess(`Restored: ./${file.file} (${file.bytesWritten} bytes)`);
@@ -63,7 +72,7 @@ export async function runReplayCommand(indexStr: string, configPath?: string, by
     }
   }
 
-  if (cfg.cooldownAfterWrite) {
+  if (cfg.cooldownAfterWrite && !dryRun) {
     const ms = cfg.writeCooldownMs ?? 60_000;
     printInfo(`Cooling down for ${Math.round(ms / 1000)}s to let linter stabilize...`);
     await sleep(ms);
