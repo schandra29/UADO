@@ -15,6 +15,8 @@ import { sleep } from '../lib/utils/sleep';
 import { findBestMatches, PatternEntry } from '../utils/matchPatterns';
 import { computeHash } from '../utils/hash';
 import { saveSnapshot } from './snapshot';
+import { validateCode } from './validate';
+import { logReview } from './logReview';
 
 function printPromptBox(text: string): void {
   const lines = text.split(/\r?\n/);
@@ -45,8 +47,9 @@ export function registerPromptCommand(program: Command): void {
     .option('--simulate-queue', 'Simulate queue logging')
     .option('--dry-run', 'Simulate file writes without saving')
     .option('--tag <tag>', 'tag for pattern logging')
+    .option('--force', 'Write even if linting fails')
     .action(async function (text?: string) {
-      const { config: configPath, simulateQueue, tag, noGuardrails, dryRun } = this.optsWithGlobals();
+      const { config: configPath, simulateQueue, tag, noGuardrails, dryRun, force } = this.optsWithGlobals();
       const cfg = loadConfig(configPath);
       const logger = pino({ name: 'uado', level: cfg.logLevel });
       const startTime = Date.now();
@@ -172,6 +175,24 @@ export function registerPromptCommand(program: Command): void {
 
             runGuardrails({ snippets: [response], bypass: noGuardrails });
 
+            const review = validateCode(response, dest);
+            logReview({
+              file: destRel,
+              result: review.passed ? 'passed' : 'failed',
+              eslintErrors: review.eslintErrors,
+              tscErrors: review.tscErrors,
+              timestamp: new Date().toISOString()
+            });
+            if (review.passed) {
+              printSuccess('✅ Success');
+            } else {
+              printError('⚠️ Failure');
+              if (!force) {
+                entry.error = 'lint or type errors';
+                return 'Validation failed';
+              }
+            }
+
             if (dryRun) {
               printInfo(`[dry-run] Would save: ${destRel} (${entry.bytesWritten} bytes)`);
               const hash = computeHash(entry);
@@ -188,7 +209,7 @@ export function registerPromptCommand(program: Command): void {
               saveSnapshot(response, hash);
               if (cfg.cooldownAfterWrite) {
                 const ms = cfg.writeCooldownMs ?? 60_000;
-                printInfo(`Cooling down for ${Math.round(ms / 1000)}s to let linter stabilize...`);
+                printInfo('🕐 Cooldown active… waiting for lint/test stabilization.');
                 await sleep(ms);
               }
             } catch (err: any) {

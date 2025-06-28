@@ -66,9 +66,10 @@ program
   .command('replay <index>')
   .description('Replay queued paste files')
   .option('--dry-run', 'Simulate restoring files without writing')
+  .option('--force', 'Write even if linting fails')
   .action(async function (index: string) {
-    const { config: configPath, noGuardrails, dryRun } = this.optsWithGlobals();
-    await runReplayCommand(index, configPath, noGuardrails, dryRun);
+    const { config: configPath, noGuardrails, dryRun, force } = this.optsWithGlobals();
+    await runReplayCommand(index, configPath, noGuardrails, dryRun, force);
   });
 program.parse(process.argv);
 const opts = program.opts();
