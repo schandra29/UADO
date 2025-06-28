@@ -33,9 +33,12 @@ uado prompt --simulate-queue "test"
 uado dashboard
 uado history
 uado test run
+uado status
+uado config
+uado version
 ```
 
-Add `--no-emoji` to disable icons if your terminal does not display them correctly.
+Add `--no-emoji` to disable icons if your terminal does not display them correctly. `--dry-run` and `--no-emoji` are internal flags for debugging and may change without notice.
 
 ## Configuration
 Create a `.uadorc.json` in your project root to tweak cooldown behavior and set execution mode:
@@ -96,7 +99,7 @@ UADO warns about common project pitfalls before writing generated code:
 Pass `--no-guardrails` to bypass these checks if needed.
 
 ## Power User Tips
-- Use `--dry-run` with `prompt` or `replay` to preview file writes without touching disk.
+- Use `--dry-run` with `prompt` or `replay` to preview file writes without touching disk (internal flag).
 - Guardrails can be disabled with `--no-guardrails` when you know it's safe.
 - Generated snapshots live under `.uado/snapshots/` and include the prompt hash in their name.
 

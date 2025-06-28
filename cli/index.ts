@@ -12,6 +12,9 @@ import { registerGuideCommand } from './guide';
 import { runHistoryCommand } from './history';
 import { registerTestCommand } from './test';
 import { runReplayCommand } from './replay';
+import { registerStatusCommand } from './status';
+import { registerVersionCommand } from './version';
+import { registerConfigCommand } from './config';
 
 import { printInfo, setUseEmoji } from './ui';
 
@@ -52,6 +55,9 @@ registerPromptCommand(program);
 registerPatternsCommand(program);
 registerGuideCommand(program);
 registerTestCommand(program);
+registerStatusCommand(program);
+registerVersionCommand(program);
+registerConfigCommand(program);
 program
   .command('history')
   .description('Show paste history')
