@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UADO Prompt Entry",
+  "type": "object",
+  "properties": {
+    "prompt": { "type": "string" },
+    "output": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "difficulty": { "type": "string" },
+    "hash": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "file": { "type": "string" }
+  },
+  "required": ["prompt", "output", "hash", "timestamp"]
+}

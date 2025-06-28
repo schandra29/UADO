@@ -8,6 +8,7 @@ import { loadConfig } from '../core/config-loader';
 import { registerDashboardCommand } from './dashboard';
 import { registerPromptCommand } from './prompt';
 import { registerPatternsCommand } from './patterns';
+import { registerStarCommand } from './star';
 import { registerGuideCommand } from './guide';
 import { runHistoryCommand } from './history';
 import { registerTestCommand } from './test';
@@ -60,6 +61,7 @@ registerStatusCommand(program);
 registerVersionCommand(program);
 registerConfigCommand(program);
 registerLevelCommand(program);
+registerStarCommand(program);
 program
   .command('history')
   .description('Show paste history')

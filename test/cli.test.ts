@@ -137,6 +137,22 @@ function testGitChanges(): TestResult {
   return { name: 'guardrail-git-status', passed, message: passed ? undefined : 'warning missing' };
 }
 
+function testStarCommand(): TestResult {
+  const dir = makeTmpDir();
+  runCmd(['test', 'mock-paste'], dir);
+  const pastePath = path.join(dir, '.uado', 'paste.log.json');
+  const entries = readJSON(pastePath);
+  const hash = entries[0].hash;
+  const snapDir = path.join(dir, '.uado', 'snapshots');
+  fs.mkdirSync(snapDir, { recursive: true });
+  fs.writeFileSync(path.join(snapDir, `snap-${hash}.txt`), 'output');
+  runCmd(['star', '1'], dir);
+  const starPath = path.join(dir, '.uado', 'starred.json');
+  const star = readJSON(starPath);
+  const passed = Array.isArray(star) && star.length === 1 && star[0].output === 'output';
+  return { name: 'star-command', passed, message: passed ? undefined : 'missing star' };
+}
+
 function main(): void {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'uado-test-'));
   const results = [
@@ -148,7 +164,8 @@ function main(): void {
     testMissingPackageJson(),
     testNodeModules(),
     testMergeConflicts(),
-    testGitChanges()
+    testGitChanges(),
+    testStarCommand()
   ];
 
   for (const r of results) {
