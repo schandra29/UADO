@@ -22,28 +22,16 @@ npm install -g uado
 
 ## CLI Usage
 ```bash
-# Send a prompt
-uado prompt "your prompt"
-# Tag the example for future suggestions
-uado prompt --tag react-component "your prompt"
+# Quick workflow
+uado guide utility            # learn the basics
+uado prompt --tag demo "Make a button"
+# review snapshot under .uado/snapshots/
+uado replay 1                 # restore the first queue entry
 
-# Generate fake log entries
+# Other commands
 uado prompt --simulate-queue "test"
-
-# View live system dashboard
 uado dashboard
-
-# Show paste history
 uado history
-
-# Start an interactive guide
-uado guide utility
-# Supported scenarios: `utility`, `debug`, `refactor`
-
-# Replay a queue entry
-uado replay <index>
-
-# Run regression tests
 uado test run
 ```
 
@@ -106,6 +94,11 @@ UADO warns about common project pitfalls before writing generated code:
 - Warns when Git has untracked or unstaged files.
 
 Pass `--no-guardrails` to bypass these checks if needed.
+
+## Power User Tips
+- Use `--dry-run` with `prompt` or `replay` to preview file writes without touching disk.
+- Guardrails can be disabled with `--no-guardrails` when you know it's safe.
+- Generated snapshots live under `.uado/snapshots/` and include the prompt hash in their name.
 
 ## Project Structure
 ```

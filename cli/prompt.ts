@@ -13,6 +13,8 @@ import { printSuccess, printError, printInfo } from './ui';
 import { runGuardrails } from './guardrails';
 import { sleep } from '../lib/utils/sleep';
 import { findBestMatches, PatternEntry } from '../utils/matchPatterns';
+import { computeHash } from '../utils/hash';
+import { saveSnapshot } from './snapshot';
 
 function printPromptBox(text: string): void {
   const lines = text.split(/\r?\n/);
@@ -41,11 +43,14 @@ export function registerPromptCommand(program: Command): void {
     .command('prompt [text]')
     .description('Send a test prompt through the orchestrator')
     .option('--simulate-queue', 'Simulate queue logging')
+    .option('--dry-run', 'Simulate file writes without saving')
     .option('--tag <tag>', 'tag for pattern logging')
     .action(async function (text?: string) {
-      const { config: configPath, simulateQueue, tag, noGuardrails } = this.optsWithGlobals();
+      const { config: configPath, simulateQueue, tag, noGuardrails, dryRun } = this.optsWithGlobals();
       const cfg = loadConfig(configPath);
       const logger = pino({ name: 'uado', level: cfg.logLevel });
+      const startTime = Date.now();
+      let destRelWritten: string | undefined;
 
       if (simulateQueue) {
         const files = ['foo.ts', 'bar.ts', 'baz.ts'];
@@ -76,7 +81,7 @@ export function registerPromptCommand(program: Command): void {
       }
 
       if (!text) {
-        printError('No prompt text provided.');
+        printError('No prompt text provided. Run `uado prompt "your text"` or see `uado prompt -h`.');
         return;
       }
 
@@ -159,18 +164,28 @@ export function registerPromptCommand(program: Command): void {
             const entry: PasteLogEntry = {
               timestamp: new Date().toISOString(),
               file: destRel,
-              bytesWritten: 0,
+              bytesWritten: Buffer.byteLength(response),
               prompt: text,
               queueIndex: 1,
               wasOverwrite
             };
+
+            runGuardrails({ snippets: [response], bypass: noGuardrails });
+
+            if (dryRun) {
+              printInfo(`[dry-run] Would save: ${destRel} (${entry.bytesWritten} bytes)`);
+              const hash = computeHash(entry);
+              saveSnapshot(response, hash);
+              return `Dry run, file not written`;
+            }
+
             try {
-              runGuardrails({ snippets: [response], bypass: noGuardrails });
               fs.mkdirSync(path.dirname(dest), { recursive: true });
               fs.writeFileSync(dest, response);
-              entry.bytesWritten = Buffer.byteLength(response);
               logger.info({ dest }, 'saved manual AI response');
               printSuccess(`File saved: ${destRel} (${entry.bytesWritten} bytes)`);
+              const hash = computeHash(entry);
+              saveSnapshot(response, hash);
               if (cfg.cooldownAfterWrite) {
                 const ms = cfg.writeCooldownMs ?? 60_000;
                 printInfo(`Cooling down for ${Math.round(ms / 1000)}s to let linter stabilize...`);
@@ -181,6 +196,7 @@ export function registerPromptCommand(program: Command): void {
               logger.error({ err }, 'failed to save manual AI response');
               printError(`Failed to write to ${path.basename(dest)} — see error above.`);
             }
+
             logPaste(entry);
             if (!entry.error) {
               if (cfg.enablePatternInjection) {
@@ -191,17 +207,23 @@ export function registerPromptCommand(program: Command): void {
               printInfo('📜 Logged in: .uado/paste.log.json');
               printInfo('🧠 Tip: Use `uado history` to view all past prompts!');
             }
+
+            destRelWritten = destRel;
             return entry.error ? `Failed to write to ${dest}` : `Saved to ${dest}`;
           }
           return fakeCallAI(text);
         });
         clearTimeout(waitLog);
-          if (!queued) {
-            printSuccess('Prompt accepted');
-          }
-          if (cfg.mode !== 'manual') {
-            printInfo(result);
-          }
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        if (!queued) {
+          printSuccess('Prompt accepted');
+        }
+        if (cfg.mode !== 'manual') {
+          printInfo(result);
+        }
+        if (destRelWritten) {
+          printSuccess(`Saved ${destRelWritten} in ${elapsed}s`);
+        }
       } finally {
         orchestrator.close();
       }
