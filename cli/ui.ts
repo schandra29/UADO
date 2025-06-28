@@ -56,6 +56,10 @@ export function printTip(msg: string): void {
   console.log(chalk.cyan(replaceIcons(`${icon('💡', 'tip')} ${msg}`)));
 }
 
+export function printWarn(msg: string): void {
+  console.log(chalk.cyan(replaceIcons(`${icon('🔴', '[!]')} ${msg}`)));
+}
+
 export function printInfo(msg: string): void {
   console.log(chalk.gray(replaceIcons(msg)));
 }

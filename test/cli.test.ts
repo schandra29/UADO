@@ -13,6 +13,10 @@ function runCmd(args: string[], cwd: string): { stdout: string; stderr: string; 
   return { stdout: res.stdout, stderr: res.stderr, status: res.status };
 }
 
+function makeTmpDir(): string {
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'uado-test-'));
+}
+
 function testMockPaste(tmpDir: string): TestResult {
   runCmd(['test', 'mock-paste'], tmpDir);
   const pastePath = path.join(tmpDir, '.uado', 'paste.log.json');
@@ -85,6 +89,51 @@ function testExplainFilter(tmpDir: string): TestResult {
   return { name: 'patterns-filter', passed, message: passed ? undefined : 'filter mismatch' };
 }
 
+function guardrailProject(dir: string, modify: (qPath: string) => void): { stdout: string; stderr: string } {
+  runCmd(['test', 'mock-paste'], dir);
+  const qPath = path.join(dir, '.uado', 'queue.log.json');
+  modify(qPath);
+  return runCmd(['replay', '1'], dir);
+}
+
+function testMissingPackageJson(): TestResult {
+  const dir = makeTmpDir();
+  const res = guardrailProject(dir, () => {});
+  const passed = res.stdout.includes('package.json');
+  return { name: 'guardrail-packagejson', passed, message: passed ? undefined : 'warning missing' };
+}
+
+function testNodeModules(): TestResult {
+  const dir = makeTmpDir();
+  const res = guardrailProject(dir, (qPath) => {
+    const data = readJSON(qPath);
+    data[0].files[0].output = "import axios from 'axios';";
+    fs.writeFileSync(qPath, JSON.stringify(data, null, 2));
+  });
+  const passed = res.stdout.includes('node_modules');
+  return { name: 'guardrail-node-modules', passed, message: passed ? undefined : 'warning missing' };
+}
+
+function testMergeConflicts(): TestResult {
+  const dir = makeTmpDir();
+  const res = guardrailProject(dir, (qPath) => {
+    const data = readJSON(qPath);
+    data[0].files[0].output = '<<<<<<< HEAD\nfoo\n=======\nbar\n>>>>>>> main';
+    fs.writeFileSync(qPath, JSON.stringify(data, null, 2));
+  });
+  const passed = res.stdout.includes('merge conflict');
+  return { name: 'guardrail-merge-conflict', passed, message: passed ? undefined : 'warning missing' };
+}
+
+function testGitChanges(): TestResult {
+  const dir = makeTmpDir();
+  runCmd(['test', 'mock-paste'], dir);
+  spawnSync('git', ['init'], { cwd: dir });
+  const res = runCmd(['replay', '1'], dir);
+  const passed = res.stdout.includes('Git changes');
+  return { name: 'guardrail-git-status', passed, message: passed ? undefined : 'warning missing' };
+}
+
 function main(): void {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'uado-test-'));
   const results = [
@@ -92,7 +141,11 @@ function main(): void {
     testHistoryOutput(tmpDir),
     testExplainMissingTag(tmpDir),
     testExplainUnknownTag(tmpDir),
-    testExplainFilter(tmpDir)
+    testExplainFilter(tmpDir),
+    testMissingPackageJson(),
+    testNodeModules(),
+    testMergeConflicts(),
+    testGitChanges()
   ];
 
   for (const r of results) {

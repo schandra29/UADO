@@ -13,6 +13,7 @@
 - Pattern-aware prompt injection from `.uado/patterns.json`
 - Automatic pattern logging when prompts succeed
 - Interactive `guide` command for beginner workflows
+- Beginner guardrails for common project pitfalls
 
 ## Installation
 ```bash
@@ -95,6 +96,16 @@ Prompt: Create a header component
 Snippet: <header>...</header>
 Explanation: This pattern builds a React component based on the prompt "Create a header component".
 ```
+
+## Guardrails
+UADO warns about common project pitfalls before writing generated code:
+
+- Warns if `package.json` is missing or malformed.
+- Alerts when new packages are detected but `node_modules` is absent.
+- Detects unresolved Git merge conflicts.
+- Warns when Git has untracked or unstaged files.
+
+Pass `--no-guardrails` to bypass these checks if needed.
 
 ## Project Structure
 ```

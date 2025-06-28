@@ -10,6 +10,7 @@ import { createCooldownEngine } from '../core/cooldown-engine';
 import { createOrchestrator } from '../core/orchestrator';
 import { loadConfig } from '../core/config-loader';
 import { printSuccess, printError, printInfo } from './ui';
+import { runGuardrails } from './guardrails';
 import { sleep } from '../lib/utils/sleep';
 import { findBestMatches, PatternEntry } from '../utils/matchPatterns';
 
@@ -42,7 +43,7 @@ export function registerPromptCommand(program: Command): void {
     .option('--simulate-queue', 'Simulate queue logging')
     .option('--tag <tag>', 'tag for pattern logging')
     .action(async function (text?: string) {
-      const { config: configPath, simulateQueue, tag } = this.optsWithGlobals();
+      const { config: configPath, simulateQueue, tag, noGuardrails } = this.optsWithGlobals();
       const cfg = loadConfig(configPath);
       const logger = pino({ name: 'uado', level: cfg.logLevel });
 
@@ -164,6 +165,7 @@ export function registerPromptCommand(program: Command): void {
               wasOverwrite
             };
             try {
+              runGuardrails({ snippets: [response], bypass: noGuardrails });
               fs.mkdirSync(path.dirname(dest), { recursive: true });
               fs.writeFileSync(dest, response);
               entry.bytesWritten = Buffer.byteLength(response);

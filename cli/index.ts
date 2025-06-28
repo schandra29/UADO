@@ -20,7 +20,8 @@ program
   .name('uado')
   .description('Universal AI Development Orchestrator')
   .option('-c, --config <path>', 'path to config file')
-  .option('--no-emoji', 'disable emoji in output');
+  .option('--no-emoji', 'disable emoji in output')
+  .option('--no-guardrails', 'disable safety guardrails');
 
 program
   .command('watch')
@@ -59,8 +60,8 @@ program
   .command('replay <index>')
   .description('Replay queued paste files')
   .action(async function (index: string) {
-    const { config: configPath } = this.optsWithGlobals();
-    await runReplayCommand(index, configPath);
+    const { config: configPath, noGuardrails } = this.optsWithGlobals();
+    await runReplayCommand(index, configPath, noGuardrails);
   });
 program.parse(process.argv);
 const opts = program.opts();
