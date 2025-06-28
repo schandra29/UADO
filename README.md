@@ -11,6 +11,7 @@
 - `--simulate-queue` option for prompt testing
 - Styled CLI output with optional emoji icons
 - Pattern-aware prompt injection from `.uado/patterns.json`
+- Automatic pattern logging when prompts succeed
 
 ## Installation
 ```bash
@@ -21,6 +22,8 @@ npm install -g uado
 ```bash
 # Send a prompt
 uado prompt "your prompt"
+# Tag the example for future suggestions
+uado prompt --tag react-component "your prompt"
 
 # Generate fake log entries
 uado prompt --simulate-queue "test"
@@ -58,7 +61,7 @@ Create a `.uadorc.json` in your project root to tweak cooldown behavior and set 
 - `writeCooldownMs` – how long to wait when `cooldownAfterWrite` is enabled (default 60000)
 - `logLevel` – `info`, `debug`, or `silent`
 - `mode` – `manual` for copy/paste mode (used by default if no config file is found)
-- `enablePatternInjection` – set to `true` to inject examples from `.uado/patterns.json`
+- `enablePatternInjection` – set to `true` to inject examples from `.uado/patterns.json` and automatically log successful prompts
 
 ## Pattern-Aware Prompt Injection
 Store successful examples in `.uado/patterns.json`:
@@ -70,6 +73,8 @@ Store successful examples in `.uado/patterns.json`:
 Enable the feature in `.uadorc.json` by setting `"enablePatternInjection": true`.
 When enabled, `uado prompt` will prepend the most similar examples to your prompt.
 Use `uado patterns suggest "your prompt"` to view the top matches without generating code.
+
+When pattern injection is enabled, every successful manual paste automatically adds an entry to `.uado/patterns.json`. Use `--tag <label>` with `uado prompt` to categorize the pattern. Over time this file will grow with examples grouped by tag, improving future suggestions.
 
 ## Project Structure
 ```

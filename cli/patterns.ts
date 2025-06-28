@@ -12,26 +12,34 @@ export function registerPatternsCommand(program: Command): void {
     .description('Suggest similar prompt patterns')
     .action((text: string) => {
       const patternsPath = path.join(process.cwd(), '.uado', 'patterns.json');
-      let data: unknown;
+      let raw: unknown;
       try {
-        data = JSON.parse(fs.readFileSync(patternsPath, 'utf8'));
+        raw = JSON.parse(fs.readFileSync(patternsPath, 'utf8'));
       } catch (err: any) {
         printError(`Failed to read patterns: ${err.message}`);
         return;
       }
 
-      if (!Array.isArray(data)) {
+      let all: PatternEntry[] = [];
+      if (Array.isArray(raw)) {
+        all = raw as PatternEntry[];
+      } else if (raw && typeof raw === 'object') {
+        for (const arr of Object.values(raw as Record<string, PatternEntry[]>)) {
+          if (Array.isArray(arr)) all = all.concat(arr);
+        }
+      } else {
         printError('patterns.json is not in the expected format.');
         return;
       }
 
-      const matches = findBestMatches(text, data as PatternEntry[], 3);
+      const matches = findBestMatches(text, all, 3);
       if (matches.length === 0) {
         printInfo('No similar patterns found.');
         return;
       }
 
       for (const m of matches) {
+        if (m.tag) printInfo(`[${m.tag}]`);
         printInfo(`Prompt: ${m.prompt}`);
         printInfo(`File: ${m.file}`);
         printInfo(`Snippet: ${m.outputSnippet}`);

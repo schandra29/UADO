@@ -2,22 +2,33 @@ export interface PatternEntry {
   prompt: string;
   file: string;
   outputSnippet: string;
+  tag?: string;
+  hash?: string;
 }
 
-function tokenize(text: string): Set<string> {
-  return new Set(text.toLowerCase().split(/\W+/).filter(Boolean));
+function tokenize(text: string): string[] {
+  return text.toLowerCase().split(/\W+/).filter(Boolean);
 }
 
-function similarity(a: string, b: string): number {
+function cosineSimilarity(a: string, b: string): number {
   const aTokens = tokenize(a);
   const bTokens = tokenize(b);
-  if (aTokens.size === 0 && bTokens.size === 0) return 0;
-  let intersection = 0;
-  for (const t of aTokens) {
-    if (bTokens.has(t)) intersection++;
+  const countsA: Record<string, number> = {};
+  const countsB: Record<string, number> = {};
+  for (const t of aTokens) countsA[t] = (countsA[t] || 0) + 1;
+  for (const t of bTokens) countsB[t] = (countsB[t] || 0) + 1;
+  let dot = 0;
+  let normA = 0;
+  let normB = 0;
+  for (const [t, c] of Object.entries(countsA)) {
+    normA += c * c;
+    if (countsB[t]) dot += c * countsB[t];
   }
-  const union = new Set([...aTokens, ...bTokens]).size;
-  return union === 0 ? 0 : intersection / union;
+  for (const c of Object.values(countsB)) {
+    normB += c * c;
+  }
+  if (normA === 0 || normB === 0) return 0;
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
 export function findBestMatches(
@@ -26,7 +37,7 @@ export function findBestMatches(
   topN: number
 ): PatternEntry[] {
   const scored = patterns
-    .map((p) => ({ score: similarity(input, p.prompt), entry: p }))
+    .map((p) => ({ score: cosineSimilarity(input, p.prompt), entry: p }))
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, topN);

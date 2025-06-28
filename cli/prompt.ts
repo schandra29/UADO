@@ -5,6 +5,7 @@ import readline from 'readline';
 import { once } from 'events';
 import pino from 'pino';
 import { logPaste, PasteLogEntry, PasteQueueEntry, logQueueEntry } from './logPaste';
+import { logPattern } from './logPattern';
 import { createCooldownEngine } from '../core/cooldown-engine';
 import { createOrchestrator } from '../core/orchestrator';
 import { loadConfig } from '../core/config-loader';
@@ -39,8 +40,9 @@ export function registerPromptCommand(program: Command): void {
     .command('prompt [text]')
     .description('Send a test prompt through the orchestrator')
     .option('--simulate-queue', 'Simulate queue logging')
+    .option('--tag <tag>', 'tag for pattern logging')
     .action(async function (text?: string) {
-      const { config: configPath, simulateQueue } = this.optsWithGlobals();
+      const { config: configPath, simulateQueue, tag } = this.optsWithGlobals();
       const cfg = loadConfig(configPath);
       const logger = pino({ name: 'uado', level: cfg.logLevel });
 
@@ -77,11 +79,22 @@ export function registerPromptCommand(program: Command): void {
         return;
       }
 
+      const originalText = text;
       if (cfg.enablePatternInjection) {
         const patternsPath = path.join(process.cwd(), '.uado', 'patterns.json');
         try {
           const raw = fs.readFileSync(patternsPath, 'utf8');
-          const patterns: PatternEntry[] = JSON.parse(raw);
+          let patterns: PatternEntry[] = [];
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            patterns = parsed as PatternEntry[];
+          } else if (parsed && typeof parsed === 'object') {
+            for (const arr of Object.values(
+              parsed as Record<string, PatternEntry[]>
+            )) {
+              if (Array.isArray(arr)) patterns = patterns.concat(arr);
+            }
+          }
           const matches = findBestMatches(text, patterns, 2);
           if (matches.length > 0) {
             const injection = matches
@@ -168,6 +181,11 @@ export function registerPromptCommand(program: Command): void {
             }
             logPaste(entry);
             if (!entry.error) {
+              if (cfg.enablePatternInjection) {
+                const snippet = response.slice(0, 200);
+                logPattern(originalText, destRel, snippet, tag);
+                printInfo('📈 Pattern added to .uado/patterns.json');
+              }
               printInfo('📜 Logged in: .uado/paste.log.json');
               printInfo('🧠 Tip: Use `uado history` to view all past prompts!');
             }
