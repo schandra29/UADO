@@ -54,7 +54,10 @@ program
 program
   .command('replay <index>')
   .description('Replay queued paste files')
-  .action(runReplayCommand);
+  .action(async function (index: string) {
+    const { config: configPath } = this.optsWithGlobals();
+    await runReplayCommand(index, configPath);
+  });
 program.parse(process.argv);
 const opts = program.opts();
 setUseEmoji(!(opts.noEmoji === true));
