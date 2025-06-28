@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { PasteLogEntry } from './logPaste';
 import { printError, printInfo, printSuccess } from './ui';
+import { loadConfig } from '../core/config-loader';
+import { sleep } from '../lib/utils/sleep';
 
 export interface QueueLogEntry {
   queueIndex: number;
@@ -10,7 +12,7 @@ export interface QueueLogEntry {
   files: Array<PasteLogEntry & { output?: string }>;
 }
 
-export function runReplayCommand(indexStr: string): void {
+export async function runReplayCommand(indexStr: string, configPath?: string): Promise<void> {
   const index = parseInt(indexStr, 10);
   if (Number.isNaN(index)) {
     printError('Invalid queue index');
@@ -38,6 +40,8 @@ export function runReplayCommand(indexStr: string): void {
     return;
   }
 
+  const cfg = loadConfig(configPath);
+
   printInfo(`\n🔁 Replaying queue entry #${index}...`);
 
   for (const file of entry.files) {
@@ -55,6 +59,12 @@ export function runReplayCommand(indexStr: string): void {
     } catch (err: any) {
       printError(`Failed to restore ${file.file}: ${err.message}`);
     }
+  }
+
+  if (cfg.cooldownAfterWrite) {
+    const ms = cfg.writeCooldownMs ?? 60_000;
+    printInfo(`Cooling down for ${Math.round(ms / 1000)}s to let linter stabilize...`);
+    await sleep(ms);
   }
 }
 

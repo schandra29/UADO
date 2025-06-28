@@ -7,13 +7,17 @@ export interface UadoConfig {
   stabilityWindowMs: number;
   logLevel: 'info' | 'debug' | 'silent';
   mode: 'openai' | 'claude' | 'manual';
+  cooldownAfterWrite?: boolean;
+  writeCooldownMs?: number;
 }
 
 export const DEFAULT_CONFIG: UadoConfig = {
   cooldownDurationMs: 90_000,
   stabilityWindowMs: 5_000,
   logLevel: 'info',
-  mode: 'openai'
+  mode: 'openai',
+  cooldownAfterWrite: false,
+  writeCooldownMs: 60_000
 };
 
 export function loadConfig(configPath?: string, logger: Logger = pino({ name: 'uado:config-loader' })): UadoConfig {

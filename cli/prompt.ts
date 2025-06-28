@@ -9,6 +9,7 @@ import { createCooldownEngine } from '../core/cooldown-engine';
 import { createOrchestrator } from '../core/orchestrator';
 import { loadConfig } from '../core/config-loader';
 import { printSuccess, printError, printInfo } from './ui';
+import { sleep } from '../lib/utils/sleep';
 
 function printPromptBox(text: string): void {
   const lines = text.split(/\r?\n/);
@@ -131,6 +132,11 @@ export function registerPromptCommand(program: Command): void {
               entry.bytesWritten = Buffer.byteLength(response);
               logger.info({ dest }, 'saved manual AI response');
               printSuccess(`File saved: ${destRel} (${entry.bytesWritten} bytes)`);
+              if (cfg.cooldownAfterWrite) {
+                const ms = cfg.writeCooldownMs ?? 60_000;
+                printInfo(`Cooling down for ${Math.round(ms / 1000)}s to let linter stabilize...`);
+                await sleep(ms);
+              }
             } catch (err: any) {
               entry.error = err.message;
               logger.error({ err }, 'failed to save manual AI response');
