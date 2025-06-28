@@ -7,6 +7,7 @@ import { createLspWatcher } from '../core/lsp-watcher';
 import { loadConfig } from '../core/config-loader';
 import { registerDashboardCommand } from './dashboard';
 import { registerPromptCommand } from './prompt';
+import { registerPatternsCommand } from './patterns';
 import { runHistoryCommand } from './history';
 import { registerTestCommand } from './test';
 import { runReplayCommand } from './replay';
@@ -46,6 +47,7 @@ program
 
 registerDashboardCommand(program);
 registerPromptCommand(program);
+registerPatternsCommand(program);
 registerTestCommand(program);
 program
   .command('history')

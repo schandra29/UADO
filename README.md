@@ -10,6 +10,7 @@
 - Built‑in test framework
 - `--simulate-queue` option for prompt testing
 - Styled CLI output with optional emoji icons
+- Pattern-aware prompt injection from `.uado/patterns.json`
 
 ## Installation
 ```bash
@@ -57,6 +58,18 @@ Create a `.uadorc.json` in your project root to tweak cooldown behavior and set 
 - `writeCooldownMs` – how long to wait when `cooldownAfterWrite` is enabled (default 60000)
 - `logLevel` – `info`, `debug`, or `silent`
 - `mode` – `manual` for copy/paste mode (used by default if no config file is found)
+- `enablePatternInjection` – set to `true` to inject examples from `.uado/patterns.json`
+
+## Pattern-Aware Prompt Injection
+Store successful examples in `.uado/patterns.json`:
+```json
+[
+  { "prompt": "Create a header component", "file": "src/Header.tsx", "outputSnippet": "<header>...</header>" }
+]
+```
+Enable the feature in `.uadorc.json` by setting `"enablePatternInjection": true`.
+When enabled, `uado prompt` will prepend the most similar examples to your prompt.
+Use `uado patterns suggest "your prompt"` to view the top matches without generating code.
 
 ## Project Structure
 ```

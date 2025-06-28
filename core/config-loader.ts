@@ -9,6 +9,8 @@ export interface UadoConfig {
   mode: 'openai' | 'claude' | 'manual';
   cooldownAfterWrite?: boolean;
   writeCooldownMs?: number;
+  /** Enable pattern-aware prompt injection */
+  enablePatternInjection?: boolean;
 }
 
 export const DEFAULT_CONFIG: UadoConfig = {
@@ -17,7 +19,8 @@ export const DEFAULT_CONFIG: UadoConfig = {
   logLevel: 'info',
   mode: 'openai',
   cooldownAfterWrite: false,
-  writeCooldownMs: 60_000
+  writeCooldownMs: 60_000,
+  enablePatternInjection: false
 };
 
 export function loadConfig(configPath?: string, logger: Logger = pino({ name: 'uado:config-loader' })): UadoConfig {

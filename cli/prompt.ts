@@ -10,6 +10,7 @@ import { createOrchestrator } from '../core/orchestrator';
 import { loadConfig } from '../core/config-loader';
 import { printSuccess, printError, printInfo } from './ui';
 import { sleep } from '../lib/utils/sleep';
+import { findBestMatches, PatternEntry } from '../utils/matchPatterns';
 
 function printPromptBox(text: string): void {
   const lines = text.split(/\r?\n/);
@@ -74,6 +75,29 @@ export function registerPromptCommand(program: Command): void {
       if (!text) {
         printError('No prompt text provided.');
         return;
+      }
+
+      if (cfg.enablePatternInjection) {
+        const patternsPath = path.join(process.cwd(), '.uado', 'patterns.json');
+        try {
+          const raw = fs.readFileSync(patternsPath, 'utf8');
+          const patterns: PatternEntry[] = JSON.parse(raw);
+          const matches = findBestMatches(text, patterns, 2);
+          if (matches.length > 0) {
+            const injection = matches
+              .map((m) => `Prompt: ${m.prompt}\nOutput:\n${m.outputSnippet}`)
+              .join('\n---\n');
+            text = `${injection}\n\n${text}`;
+            logger.info(
+              { usedPatterns: matches.map((m) => m.file) },
+              'pattern injection applied'
+            );
+          } else {
+            logger.info('pattern injection enabled but no matches found');
+          }
+        } catch (err: any) {
+          logger.warn({ err }, 'failed to load patterns for injection');
+        }
       }
 
       const cooldown = createCooldownEngine({
