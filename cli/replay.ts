@@ -5,6 +5,8 @@ import { printError, printInfo, printSuccess } from './ui';
 import { runGuardrails } from './guardrails';
 import { loadConfig } from '../core/config-loader';
 import { sleep } from '../lib/utils/sleep';
+import { validateCode } from './validate';
+import { logReview } from './logReview';
 
 export interface QueueLogEntry {
   queueIndex: number;
@@ -17,7 +19,8 @@ export async function runReplayCommand(
   indexStr: string,
   configPath?: string,
   bypassGuardrails?: boolean,
-  dryRun?: boolean
+  dryRun?: boolean,
+  force?: boolean
 ): Promise<void> {
   const index = parseInt(indexStr, 10);
   if (Number.isNaN(index)) {
@@ -60,6 +63,22 @@ export async function runReplayCommand(
 
     try {
       runGuardrails({ snippets: [file.output || ''], bypass: bypassGuardrails });
+      const review = validateCode(file.output || '', dest);
+      logReview({
+        file: file.file,
+        result: review.passed ? 'passed' : 'failed',
+        eslintErrors: review.eslintErrors,
+        tscErrors: review.tscErrors,
+        timestamp: new Date().toISOString()
+      });
+      if (review.passed) {
+        printSuccess('✅ Success');
+      } else {
+        printError('⚠️ Failure');
+        if (!force) {
+          continue;
+        }
+      }
       if (dryRun) {
         printInfo(`[dry-run] Would restore: ./${file.file} (${file.bytesWritten} bytes)`);
         continue;
@@ -74,7 +93,7 @@ export async function runReplayCommand(
 
   if (cfg.cooldownAfterWrite && !dryRun) {
     const ms = cfg.writeCooldownMs ?? 60_000;
-    printInfo(`Cooling down for ${Math.round(ms / 1000)}s to let linter stabilize...`);
+    printInfo('🕐 Cooldown active… waiting for lint/test stabilization.');
     await sleep(ms);
   }
 }

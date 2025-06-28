@@ -5,6 +5,7 @@
 ## Features
 - Prompt handling with cooldown prediction
 - Paste and queue logging to `.uado/`
+- Lint and TypeScript review logs in `.uado/review.log.json`
 - `history` command for browsing past prompts
 - `replay` command for restoring queued files
 - Built‑in test framework
@@ -55,7 +56,7 @@ Create a `.uadorc.json` in your project root to tweak cooldown behavior and set 
 - `cooldownDurationMs` – maximum time to stay in cooldown after a file change
 - `stabilityWindowMs` – how long to wait for file stability after the LSP signals readiness
 - `cooldownAfterWrite` – enable a delay after writing files
-- `writeCooldownMs` – how long to wait when `cooldownAfterWrite` is enabled (default 60000)
+- `writeCooldownMs` – how long to wait when `cooldownAfterWrite` is enabled (default 60000). After each write UADO displays a cooldown banner so lint and TypeScript can stabilize.
 - `logLevel` – `info`, `debug`, or `silent`
 - `mode` – `manual` for copy/paste mode (used by default if no config file is found)
 - `enablePatternInjection` – set to `true` to inject examples from `.uado/patterns.json` and automatically log successful prompts
