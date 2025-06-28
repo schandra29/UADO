@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { PasteLogEntry } from './logPaste';
 import { printError, printInfo, printSuccess } from './ui';
+import { runGuardrails } from './guardrails';
 import { loadConfig } from '../core/config-loader';
 import { sleep } from '../lib/utils/sleep';
 
@@ -12,7 +13,7 @@ export interface QueueLogEntry {
   files: Array<PasteLogEntry & { output?: string }>;
 }
 
-export async function runReplayCommand(indexStr: string, configPath?: string): Promise<void> {
+export async function runReplayCommand(indexStr: string, configPath?: string, bypassGuardrails?: boolean): Promise<void> {
   const index = parseInt(indexStr, 10);
   if (Number.isNaN(index)) {
     printError('Invalid queue index');
@@ -53,6 +54,7 @@ export async function runReplayCommand(indexStr: string, configPath?: string): P
     }
 
     try {
+      runGuardrails({ snippets: [file.output || ''], bypass: bypassGuardrails });
       fs.mkdirSync(path.dirname(dest), { recursive: true });
       fs.writeFileSync(dest, file.output || '');
       printSuccess(`Restored: ./${file.file} (${file.bytesWritten} bytes)`);
