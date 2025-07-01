@@ -17,6 +17,7 @@ import { registerStatusCommand } from './status';
 import { registerVersionCommand } from './version';
 import { registerConfigCommand } from './config';
 import { registerLevelCommand } from './level';
+import { registerRunSafeCommands } from './runsafe';
 
 import { printInfo, setUseEmoji } from './ui';
 
@@ -62,6 +63,7 @@ registerVersionCommand(program);
 registerConfigCommand(program);
 registerLevelCommand(program);
 registerStarCommand(program);
+registerRunSafeCommands(program);
 program
   .command('history')
   .description('Show paste history')
